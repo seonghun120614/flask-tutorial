@@ -20,24 +20,25 @@ def register():
         error = None
 
         if not username:
-            error = 'Invalid Username.'
+            error = 'Username is required.'
         elif not password:
-            error = 'Invalid Password'
+            error = 'Password is required'
 
-        if error is not None:
+        if error is None:
             try:
                 db.execute(
                     "INSERT INTO user (username, password) VALUES (?, ?)",
-                    (username, password)
+                    (username, generate_password_hash(password))
                 )
                 db.commit()
-            except db.IntegerityError:
-                error = 'Integerity Error.'
+            except db.IntegrityError:
+                error = f"User {username} is already registered."
             else:
                 return redirect(url_for("auth.login"))
-            flash(error)
 
-        return render_template("auth/register.html")
+        flash(error)
+
+    return render_template("auth/register.html")
 
 
 @bp.route('login', methods=('GET', 'POST'))
@@ -47,15 +48,16 @@ def login():
         password = request.form['password']
         db = get_db()
         error = None
+
         user = db.execute(
-            "SELECT * FROM user WHERE username = ?",
-            (username, )
+            "SELECT * FROM user WHERE username = ?", (username, )
         ).fetchone()
+        print(user)
 
         if user is None:
-            error = "Invalid User Name."
-        elif check_password_hash(user['password'], password):
-            error = "Invalid User Password."
+            error = "Invalid Name."
+        elif not check_password_hash(user['password'], password):
+            error = "Invalid Password."
 
         if error is None:
             session.clear()
