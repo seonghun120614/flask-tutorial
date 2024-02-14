@@ -24,7 +24,15 @@ def create_app(test_config=None):
     def hello():
         return 'Hello, World!'
 
+    # 내 db에 대한 application 의 cli 에서
+    # init_db_command 를 사용 하도록 함.
+    # db 가 down 될 때는 close_db를 통해 리소스 회수 하는
+    # 코드를 실행 하도록 함.
     from . import db
     db.init_app(app)
+
+    # 내 Application에 bp Blueprint 적용
+    from . import auth
+    app.register_blueprint(auth.bp)
 
     return app
